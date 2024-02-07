@@ -56,3 +56,8 @@ void printDictionary(struct dicitonary dc)
     }
     
 }
+
+int main()
+{
+    return 0;
+}

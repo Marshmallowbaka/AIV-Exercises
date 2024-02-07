@@ -8,6 +8,23 @@ struct Node
     struct Node *next;
 };
 
+//returns last node of the list
+struct Node* getNodeTail(struct Node* head)
+{
+    if(!head)   return NULL;
+
+    struct Node* current_node = head;
+    struct Node* last_node = head;
+    
+    while(current_node)
+    {
+        last_node = current_node;
+        current_node = current_node -> next;
+    }
+
+    return last_node;
+}
+
 //print list nodes
 void printList(struct Node *head)
 {
@@ -61,22 +78,6 @@ void appendNode(struct Node **head, int data)
     new_node->prev = tail;
 }
 
-//returns last node of the list
-struct Node* getNodeTail(struct Node* head)
-{
-    if(!head)   return NULL;
-
-    struct Node* current_node = head;
-    struct Node* last_node = head;
-    
-    while(current_node)
-    {
-        last_node = current_node;
-        current_node = current_node -> next;
-    }
-
-    return last_node;
-}
 
 //returns and delete node from the top of the list
 struct Node *pop(struct Node **head)
@@ -156,7 +157,7 @@ void insertAfterItem(struct Node **head, int item, int data)
 }
 
 //insert before an item
-void insertAfterItem(struct Node **head, int item, int data)
+void insertBeforeItem(struct Node **head, int item, int data)
 {
     struct Node *node = (struct Node*)malloc(sizeof(struct Node));
 

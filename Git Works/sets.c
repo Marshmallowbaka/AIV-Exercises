@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define HASHMAP_SIZE 64
 #define HASHMAP_SIZE_LIST 1
@@ -89,12 +90,17 @@ void set_remove(struct set *set, const char *key)
         {
             if (set->hashmap[index][i].key_len == key_len && !memcmp(set->hashmap[index][i].key, key, key_len))
             {
-                set->hashmap[index][i].key_len = NULL;
+                set->hashmap[index][i].key_len = 0;
                 set->hashmap[index][i].key = NULL;
-                free(set->hashmap[index][i]);
+                free(&set->hashmap[index][i]);
                 printf("REMOVED %s at index %llu slot %llu\n", key, index, i);
                 return;
             }
         }
     }
+}
+
+int main()
+{
+    return 0;
 }

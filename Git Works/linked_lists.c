@@ -69,7 +69,6 @@ void appendNode(struct Node **head, int data)
         (*head)=new_node;
         return;
     }
-
     struct Node *tail = getNodeTail(*head);
     tail->next = new_node;
 }
@@ -151,6 +150,5 @@ void reverseList(struct Node **head)
 
 int main(int argc, char** argv)
 {
-
     return 0;
 }
