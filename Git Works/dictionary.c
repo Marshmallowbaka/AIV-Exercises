@@ -1,63 +1,126 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 
-#define MAX_SIZE 100
+#define SIZE 100
 
-struct dicitonary 
-{
-    int size;
-    char *keys[MAX_SIZE];
-    int values[MAX_SIZE];
+// hash function
+unsigned long hash(char *str) {
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *str++)) {
+        hash = ((hash << 5) + hash) ^ c;
+    }
+    return hash % SIZE;
+}
+
+// Dictionary Node
+struct KeyValuePair {
+    char *key;
+    char *value;
+    struct KeyValuePair *next;
 };
 
-// int size = 0;
-// char *keys[MAX_SIZE];
-// int values[MAX_SIZE];
+// Dictionary
+struct Dictionary {
+    struct KeyValuePair *table[SIZE];
+};
 
-//get index of a key
-int getIndex(struct dicitonary dc, char *key)
-{
-    for (int i = 0; i < dc.size; i++)
-    {
-        if(strcmp(dc.keys[i], key) == 0) return i; //string compare 
+// like create Node but use a pair
+struct KeyValuePair *createKeyValuePair(char *key, char *value) {
+    struct KeyValuePair *newPair = (struct KeyValuePair *)malloc(sizeof(struct KeyValuePair));
+    if (newPair == NULL) {
+        printf("Memoria esaurita!\n");
+        exit(1);
     }
-    return -1; //no key found
+    newPair->key = strdup(key);
+    newPair->value = strdup(value);
+    newPair->next = NULL;
+    return newPair;
 }
 
-//insert element
-void insert(struct dicitonary dc, char *key, int data)
-{
-    int index = getIndex(dc, key);
-    if(index == -1) //key not found
-    {
-        strcpy(dc.keys[dc.size],key);
-        dc.values[dc.size] = data;
-        dc.size++;
+// initialize empty dictionary
+void initializeDictionary(struct Dictionary *dict) {
+    for (int i = 0; i < SIZE; i++) {
+        dict->table[i] = NULL;
     }
-    else dc.values[index] = data; //key found
 }
 
-//get element
-int get(struct dicitonary dc, char *key)
-{
-    int index = getIndex(dc, key);
-    
-    if(index == -1) return -1;
-
-    return dc.values[index];
+// insert value
+void insertKeyValuePair(struct Dictionary *dict, char *key, char *value) {
+    unsigned long index = hash(key);
+    struct KeyValuePair *newPair = createKeyValuePair(key, value);
+    newPair->next = dict->table[index];
+    dict->table[index] = newPair;
 }
 
-//print
-void printDictionary(struct dicitonary dc)
-{
-    for (int i = 0; i < dc.size; i++)
-    {
-        printf("%s: %d\n",dc.keys[i],dc.values[i]);
+// get value
+char *getValue(struct Dictionary *dict, char *key) {
+    unsigned long index = hash(key);
+    struct KeyValuePair *current = dict->table[index];
+    while (current != NULL) {
+        if (strcmp(current->key, key) == 0) {
+            return current->value;
+        }
+        current = current->next;
     }
-    
+    return NULL; // Chiave non trovata
 }
 
-int main()
-{
+// remove a value
+void removeKeyValuePair(struct Dictionary *dict, char *key) {
+    unsigned long index = hash(key);
+    struct KeyValuePair *current = dict->table[index];
+    struct KeyValuePair *prev = NULL;
+    while (current != NULL) {
+        if (strcmp(current->key, key) == 0) {
+            if (prev == NULL) {
+                dict->table[index] = current->next;
+            } else {
+                prev->next = current->next;
+            }
+            free(current->key);
+            free(current->value);
+            free(current);
+            return;
+        }
+        prev = current;
+        current = current->next;
+    }
+}
+
+// print dictionary
+void printDictionary(struct Dictionary *dict) {
+    for (int i = 0; i < SIZE; i++) {
+        struct KeyValuePair *current = dict->table[i];
+        printf("Bucket[%d]: ", i);
+        while (current != NULL) {
+            printf("(%s, %s) ", current->key, current->value);
+            current = current->next;
+        }
+        printf("\n");
+    }
+}
+
+int main() {
+    struct Dictionary myDict;
+    initializeDictionary(&myDict);
+
+    insertKeyValuePair(&myDict, "apple", "mela");
+    insertKeyValuePair(&myDict, "banana", "banana");
+    insertKeyValuePair(&myDict, "orange", "arancia");
+    insertKeyValuePair(&myDict, "grape", "uva");
+
+    printf("Il valore associato a 'banana' è: %s\n", getValue(&myDict, "banana"));
+
+    printf("Dizionario prima della rimozione:\n");
+    printDictionary(&myDict);
+
+    removeKeyValuePair(&myDict, "banana");
+
+    printf("Dizionario dopo la rimozione:\n");
+    printDictionary(&myDict);
+
     return 0;
 }

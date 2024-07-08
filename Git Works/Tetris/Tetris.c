@@ -3,14 +3,35 @@
 #include <string.h>
 #include "Tetris.h"
 #include "Tetromino.c"
+#include "Patricles.c"
 
 int score = 0;
 const int speedUpTimerDaddy = 2;
 int speedUpTimer = 0;
 float moveTetrominoDownTimer = 1.f;
 
+Particle particles[MAX_PARTICLES];
+
 void drawTetromino(const Color currentColor, const int startOffsetX, const int startOffsetY, const int tetrominoStartX, const int tetrominoStartY, const int *tetromino)
 {
+    for(int y = 0; y < TETROMINO_SIZE; y++)
+    {
+        for(int x = 0; x < TETROMINO_SIZE; x++)
+        {
+            const int offset = y * TETROMINO_SIZE + x;
+
+            if(tetromino[offset] == 1)
+            {
+                DrawRectangle((x + tetrominoStartX) * TILE_SIZE + startOffsetX, (y + tetrominoStartY) * TILE_SIZE + startOffsetY, TILE_SIZE, TILE_SIZE, currentColor);
+            }
+        }
+    }
+}
+
+
+void drawTetrominoClearing(const Color currentColor, const int startOffsetX, const int startOffsetY, const int tetrominoStartX, const int tetrominoStartY, const int *tetromino, bool isFlickering)
+{
+    if(!isFlickering) return;
     for(int y = 0; y < TETROMINO_SIZE; y++)
     {
         for(int x = 0; x < TETROMINO_SIZE; x++)
@@ -45,7 +66,7 @@ void ResetLines(int startLineY)
 
 bool DeleteLines()
 {
-    bool playbleSound = false;
+    bool playbleSound = false;    
     for (int y = 0; y < STAGE_HEIGHT - 1; y++)
     {
         int checkLine = 1;
@@ -76,14 +97,15 @@ bool DeleteLines()
                 if(moveTetrominoDownTimer<=0) moveTetrominoDownTimer = 0.1f; 
             }
             playbleSound = true;
+            SetParticleYPos(particles, y * STAGE_HEIGHT + 3);
         }
-    }   
+    }
     return playbleSound;
 }
 
 
 
-int main(int argc, char** argv, char** environ)
+int main(int argc, char** argv, char** environment)
 {
     const int windowWidth = 600; 
     const int windowHeight = 700; 
@@ -96,6 +118,19 @@ int main(int argc, char** argv, char** environ)
 
     int currentTetrominoX = tetrominoStartX;
     int currentTetrominoY = tetrominoStartY;
+
+    //init particles
+    for (int i = 0; i < MAX_PARTICLES; i++) {
+        particles[i].position = (Vector2){ GetScreenWidth() / 2, GetScreenHeight() / 2 };
+        particles[i].color = (Color){ GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(0, 255), 255 };
+        particles[i].radius = GetRandomValue(1, 3);
+        particles[i].speed = (Vector2){ GetRandomValue(-10, 10), GetRandomValue(-10, 10) };
+        particles[i].active = false;
+    }
+
+    const float particleTimerDef = 20;
+    float particlesTimer = particleTimerDef;
+    bool particleActive = false;
 
     time_t unixTime;
 
@@ -206,10 +241,17 @@ int main(int argc, char** argv, char** environ)
                 
                 float soundTime = moveTetrominoDownTimer;
                 
-                if(DeleteLines()) PlaySound(deleteLineSound);
-                
-                else PlaySound(falledSound);
-                
+                if(DeleteLines())
+                {
+                    PlaySound(deleteLineSound);
+                    SetParticleActive(particles,true);
+                    particleActive = true;
+                }
+                else
+                {
+                    PlaySound(falledSound);
+                }
+
                 if(moveTetrominoDownTimer!=soundTime) PlaySound(timeIncreaseSound);
 
                 //----game lost----
@@ -228,6 +270,19 @@ int main(int argc, char** argv, char** environ)
                 currentColor = GetRandomValue(0,7);
             }
         }
+
+        if(particleActive)
+        {
+            particlesTimer -= 0.25f;
+            if(particlesTimer <= 0)
+            {
+                particlesTimer = particleTimerDef;
+                SetParticleActive(particles, false);
+                particleActive = false;
+            }
+        }
+        
+        ParticlesUpdate(particles);
 
         BeginDrawing();
         ClearBackground(RED);
@@ -249,7 +304,8 @@ int main(int argc, char** argv, char** environ)
         }
         
         drawTetromino(colorTypes[currentColor],startOffsetX, startOffsetY, currentTetrominoX, currentTetrominoY, tetrominoTypes[currentTetrominoType][currentRotation]);
-
+        
+        DrawParticles(particles);
         
         DrawText(TextFormat("Score: %06i", score), 200, 20, 27, WHITE);
         DrawText(TextFormat("Speed: %.1fs", moveTetrominoDownTimer), 40, 100, 20, WHITE);

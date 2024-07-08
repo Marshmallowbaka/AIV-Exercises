@@ -8,13 +8,12 @@ struct Node
 };
 
 //print list nodes
-void printList(struct Node *head)
-{
-    while(head)
-    {
-        printf("%i  %p -> %p \n", head->data, head, head->next);
-        head = head->next;
+void printList(struct Node* node) {
+    while (node != NULL) {
+        printf("%d ", node->data);
+        node = node->next;
     }
+    printf("\n");
 }
 
 //get list items count
@@ -125,30 +124,61 @@ struct Node *delete(struct Node **head, int index)
 }
 
 //reversing of the list
-void reverseList(struct Node **head)
-{
-    if(!head || (*head)->next) return;
+void reverseList(struct Node** headRef) {
+    struct Node* prev = NULL;
+    struct Node* current = *headRef;
+    struct Node* next = NULL;
 
-    struct Node *temp = *head;
-    struct Node *prev = NULL;
-
-    int nodeCount = getListCount(*head);
-
-    for (int i = 0; i < nodeCount; i++)
-    {
-        while(!temp->next)
-        {
-            prev = temp;
-            temp = temp->next;
-        }
-
-        prev->next = NULL;
-        temp->next = *head;
-        *head = temp;
+    while (current != NULL) {
+        // save next pointer
+        next = current->next;
+        // swap it
+        current->next = prev;
+        // move forward
+        prev = current;
+        current = next;
     }
+    *headRef = prev;
 }
 
 int main(int argc, char** argv)
 {
+    //generate list
+    struct Node* node = NULL;
+
+    //push data
+    pushNode(&node,22);
+    pushNode(&node,35);
+    pushNode(&node,16);
+
+    //append data
+    appendNode(&node,9);
+    appendNode(&node,5);
+
+    printf("\n");
+    printf("printing the list: \n");
+    printList(node);
+
+    //reverse the list
+    reverseList(&node);
+    printf("\n");
+    printf("printing the reversed list: \n");
+    printList(node);
+
+    //popEnd and pop the list
+    printf("\n");
+    printf("pop the last number in list: \n%d \n",popEnd(&node)->data);
+    printf("\n");
+    printf("pop the first number in list: \n%d \n",pop(&node)->data);
+    printf("\n");
+    printf("printing the actual list: \n");
+    printList(node);
+
+    //delete from index
+    delete(&node,1);
+    printf("\n");
+    printf("printing the list after the cancellation of the second number: \n");
+    printList(node);
+
     return 0;
 }
